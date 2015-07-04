@@ -8,13 +8,13 @@ const Aris::RT_CONTROL::EServoState CElmoMotor::m_stateMachine[Aris::RT_CONTROL:
 
 //  CMD_NONE,                                      CMD_POWEROFF,                           CMD_STOP,                       CMD_ENABLE,                       CMD_RUNNING,                    CMD_GOHOME
 
-  {Aris::RT_CONTROL::EMSTAT_NONE      ,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_INVALID, //STA_NONE
-   Aris::RT_CONTROL::EMSTAT_POWEREDOFF,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_INVALID, //STA_POWEREDOFF
-   Aris::RT_CONTROL::EMSTAT_STOPPED,   Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_INVALID, //STA_STOPPED
-   Aris::RT_CONTROL::EMSTAT_ENABLED   ,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_ENABLED
-   Aris::RT_CONTROL::EMSTAT_RUNNING ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_RUNNING
-   Aris::RT_CONTROL::EMSTAT_HOMING   , Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_INVALID,Aris::RT_CONTROL::EMSTAT_HOMING,  //STA_HOMING
-   Aris::RT_CONTROL::EMSTAT_FAULT   ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING}; //STA_FAULT
+  {Aris::RT_CONTROL::EMSTAT_NONE      ,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_NONE, //STA_NONE
+   Aris::RT_CONTROL::EMSTAT_POWEREDOFF,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_NONE, //STA_POWEREDOFF
+   Aris::RT_CONTROL::EMSTAT_STOPPED,   Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_NONE, //STA_STOPPED
+   Aris::RT_CONTROL::EMSTAT_ENABLED   ,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_NONE, //STA_ENABLED
+   Aris::RT_CONTROL::EMSTAT_RUNNING ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_RUNNING
+   Aris::RT_CONTROL::EMSTAT_HOMING   , Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_HOMING,  //STA_HOMING
+   Aris::RT_CONTROL::EMSTAT_FAULT   ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_HOMING}; //STA_FAULT
 
  char CElmoMotor::print_poweredoff[PRINT_INFO_BUFFER_SIZE];
  char CElmoMotor::print_stop[PRINT_INFO_BUFFER_SIZE];
@@ -32,11 +32,12 @@ CElmoMotor::CElmoMotor()
     m_motorMode=Aris::RT_CONTROL::OMD_INVALID;
     m_nextState=Aris::RT_CONTROL::EMSTAT_POWEREDOFF;
     m_subState=SUB_READY;
-    m_isMotorCMDComplete=false;
+    m_isMotorCMDComplete=true;
     m_isHomingFinished=false;
     m_hasGoneHome=false;
     m_driverID=0;
     m_motorCommand.command=Aris::RT_CONTROL::EMCMD_NONE;
+    _currentCommand=Aris::RT_CONTROL::EMCMD_NONE;
     m_motorCommand.operationMode=Aris::RT_CONTROL::OM_CYCLICPOS;
 }
 
@@ -245,8 +246,10 @@ int CElmoMotor::ReadData(CElmoMotorData *p_data) const
     p_data->Current       = EC_READ_S16(m_pDomainAllPd + m_offsetElmoCurrentActualValue);
     p_data->StatusWord    = EC_READ_U16(m_pDomainAllPd + m_offsetElmoStatusWord);
 
+	 //rt_printf("  torque command read %d\n",p_data->Torque);
 
     p_data->Mode          = EC_READ_U8(m_pDomainAllPd + m_offsetElmoModeOfOperationDisplay);
+
     p_data->DigitalInputs = EC_READ_U32(m_pDomainAllPd + m_offsetElmoDigitalInputs);
     return 0;
 }
@@ -260,6 +263,8 @@ int CElmoMotor::WriteData(const CElmoMotorData& data)
     EC_WRITE_S16(m_pDomainAllPd + m_offsetElmoMaxTorque,       data.MaxTorque);
     EC_WRITE_U16(m_pDomainAllPd + m_offsetElmoControlWord,     data.ControlWord);
     EC_WRITE_U8 (m_pDomainAllPd + m_offsetElmoModeOfOperation, data.Mode);
+	//rt_printf("   mode command written %d\n",data.Mode);
+
     return 0;
 }
 
@@ -410,41 +415,37 @@ int CElmoMotor::DoCommand()
     	        break;
 
     	    case Aris::RT_CONTROL::EMSTAT_HOMING:
-    	    	//m_motorCommandData.Mode=m_motorCommand.operationMode;
-    	    	if (m_currentState == Aris::RT_CONTROL::EMSTAT_POWEREDOFF)
-    	    		m_motorCommandData.ControlWord = 0x06;  // require STOPPED state firstly
-    	    	else if(m_currentState==Aris::RT_CONTROL::EMSTAT_STOPPED)
-    	    		m_motorCommandData.ControlWord=0x07;
-    	    	else if(m_currentState==Aris::RT_CONTROL::EMSTAT_ENABLED)
-    	    		m_motorCommandData.ControlWord=0x0F;
-    	    	else if(m_currentState==Aris::RT_CONTROL::EMSTAT_RUNNING)
+
+    	    	if(m_currentState==Aris::RT_CONTROL::EMSTAT_RUNNING)
         	    	{
         	    		m_motorCommandData.Mode=6;//homing mode
                          rt_printf("going home\n");
         	    	}
-
-        	    	else if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
+        	    else if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
         	    		if(m_subState==SUB_FINISHED)
         	    		{
-        	    			m_isHomingFinished=true;
-
-        	    	 	 	rt_printf("homng finished\n");
+        	    			m_hasGoneHome=true;
+        	    		    m_isHomingFinished=true;
+        	    			m_isMotorCMDComplete=true;
+        	    			//_currentCommand==Aris::RT_CONTROL::EMCMD_RUNNING;
+         	    	 	 	rt_printf("homng finished\n");
+         	    			if(m_motorCommand.operationMode==8||m_motorCommand.operationMode==9||m_motorCommand.operationMode==10)
+         	    				m_motorCommandData.Mode=m_motorCommand.operationMode;
+         	    			else
+         	    				m_motorCommandData.Mode=DEFAULT_OPERATION_MODE;//NEED MUST
         	    		}
         	    		else //SUB_READY or SUB_BUSY
         	    		{
-
-        	    			// keep going home
         	    			m_motorCommandData.ControlWord=0x1F;
         	    		}
-    	    //	}
 
     	    	break;
-    	    case Aris::RT_CONTROL::EMSTAT_INVALID:
+    	    case Aris::RT_CONTROL::EMSTAT_NONE:
     	    	break;
     	    }
     }
 
-    return 0;  // No error
+    return 0;
 }
 
 void CElmoMotor::UpdateMotorState()
@@ -460,6 +461,7 @@ void CElmoMotor::UpdateMotorState()
 		break;
 	case 10:
 		m_motorMode=Aris::RT_CONTROL::OMD_CYCLICTORQ;
+		m_motorCommandData.MaxTorque=300;
 		break;
 	//case 6:
 	//	m_motorMode=Aris::RT_CONTROL::OM_HOMING;
@@ -468,7 +470,6 @@ void CElmoMotor::UpdateMotorState()
 		m_motorMode=Aris::RT_CONTROL::OMD_INVALID;
 		break;
 	}
-
 
 	uint motorState=m_motorFeedbackData.StatusWord;
     int motorState_0x000F = (motorState& 0x000F);
@@ -514,11 +515,7 @@ void CElmoMotor::UpdateMotorState()
 
 	if(m_currentState!=_currentState)
 	{
-		//rt_printf("motor 0 operation mode: %d\n",motormode);
-		//rt_printf("motor 0 operation mode command: %d\n",m_motorCommand.operationMode);
-
-		//rt_printf("Aris_Device:motor state changed from %s to %s.\n",ServoStateName[_currentState],ServoStateName[m_currentState]);
-	    rt_printf("Device Number %d:",m_driverID);
+ 	    rt_printf("Device Number %d:",m_driverID);
 	    switch(m_currentState)
 	    {
 	    case Aris::RT_CONTROL::EMSTAT_POWEREDOFF:
@@ -554,22 +551,53 @@ void CElmoMotor::UpdateMotorState()
 
 	    }
 		_currentState=m_currentState;
+
+
+		if(m_currentState==m_nextState)
+		{
+			m_nextState=Aris::RT_CONTROL::EMSTAT_NONE;
+			//rt_printf("see a state change \n");
+			m_isMotorCMDComplete=true;
+		}
+
+		if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
+		{
+				m_isMotorCMDComplete=false;
+				m_nextState=Aris::RT_CONTROL::EMSTAT_HOMING;
+		}
+	//	else
+	//	{
+	//		m_isHomingFinished=false;
+	//	}
+		rt_printf("see a state change,next state%d ,current state%d \n",m_nextState,m_currentState);
+
 	}
 
 
 
-	if(m_isHomingFinished==true&&m_motorCommand.command==Aris::RT_CONTROL::EMCMD_GOHOME)
+	if(m_stateMachine[m_currentState][m_motorCommand.command]!=Aris::RT_CONTROL::EMSTAT_NONE)
+	{
+		//valid command
+		if(m_motorCommand.command!=_currentCommand)
+		{
+			_currentCommand=m_motorCommand.command;
+			m_nextState=m_stateMachine[m_currentState][_currentCommand];
+			m_isMotorCMDComplete=false;
+			rt_printf("see a command change,command %d,next state%d ,current state%d \n",m_motorCommand.command,m_nextState,m_currentState);
+
+		}
+	}
+
+
+
+	/*if(m_isHomingFinished==true&&m_motorCommand.command==Aris::RT_CONTROL::EMCMD_GOHOME)
  	{
 		m_motorCommand.command=Aris::RT_CONTROL::EMCMD_RUNNING;
 	}
 
 
-	//rt_printf("currentstate:%d\n",m_currentState);
-	m_nextState=m_stateMachine[m_currentState][m_motorCommand.command];
+ 	m_nextState=m_stateMachine[m_currentState][m_motorCommand.command];
 
-   //  rt_printf("motor command in motor level: %d\n",m_motorCommand.command);
-   //  rt_printf("motor state in motor level: %d\n",m_currentState);
-   //  rt_printf("motor next state in motor level: %d\n",m_nextState);
 
 	if(m_nextState==m_currentState&&m_motorCommand.operationMode==m_motorFeedbackData.Mode&&m_currentState!=Aris::RT_CONTROL::EMSTAT_HOMING)
 	{
@@ -587,12 +615,13 @@ void CElmoMotor::UpdateMotorState()
 		m_isMotorCMDComplete=true;
 	}
 	else
-		m_isMotorCMDComplete=false;
+		m_isMotorCMDComplete=false;*/
+
   }
 
 bool CElmoMotor::CheckMotorHomed()
 {
-	return m_isHomingFinished;
+	return m_hasGoneHome;
 }
 
 void CElmoMotor::ResettoGoHome()
@@ -649,6 +678,7 @@ void CSysPID::InitPositionToTorque()
 void CSysPID::DoPID(ElmoMotor::CElmoMotorData* p_Data, ElmoMotor::CElmoMotorData* p_Order,
 		int SpeedLimit, int n)
 {
+
 	int PositionNow 	= 	0;
 	int VelocityNow 	= 	0;
 	int TorqueNow 		= 	0;
@@ -698,8 +728,9 @@ void CSysPID::DoPID(ElmoMotor::CElmoMotorData* p_Data, ElmoMotor::CElmoMotorData
 		VelocityErrorI[i] += VelocityErrorP[i];
 		VelocityErrorBefore[i] = VelocityErrorP[i];
 
-		TorqueTarget = (int) (Kp_PosToTor_2 * VelocityErrorP[i] + Ki_PosToTor_2 * VelocityErrorI[i]
-				+ Kd_PosToTor_2 * VelocityErrorD[i]);
+		 //TorqueTarget = (int) (Kp_PosToTor_2 * VelocityErrorP[i] + Ki_PosToTor_2 * VelocityErrorI[i]
+			//	+ Kd_PosToTor_2 * VelocityErrorD[i]);
+		TorqueTarget=p_Order[i].Torque;
 
 		//printf("%f\t%f\t%f\t%d\n", VelocityErrorP, VelocityErrorI,
 		//		VelocityErrorD, (int) TorqueTarget);
@@ -717,7 +748,6 @@ void CSysPID::DoPID(ElmoMotor::CElmoMotorData* p_Data, ElmoMotor::CElmoMotorData
 		p_Order[i].Torque = TorqueTarget;
 		p_Order[i].Position = PositionTarget;
 		p_Order[i].Velocity = VelocityTarget;
-
 
 	}
 };
@@ -972,6 +1002,7 @@ void CDeviceMaster::DoPID()
 	 * torque loop unusable
 	 */
 	m_pid.DoPID(m_feedbackData.m_motorData,m_commandData.m_motorData);
+
 }
 
 int CDeviceMaster::DeactiveMaster()
