@@ -14,7 +14,7 @@ const Aris::RT_CONTROL::EServoState CElmoMotor::m_stateMachine[Aris::RT_CONTROL:
    Aris::RT_CONTROL::EMSTAT_ENABLED   ,Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_NONE, //STA_ENABLED
    Aris::RT_CONTROL::EMSTAT_RUNNING ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_RUNNING,Aris::RT_CONTROL::EMSTAT_HOMING, //STA_RUNNING
    Aris::RT_CONTROL::EMSTAT_HOMING   , Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_HOMING,  //STA_HOMING
-   Aris::RT_CONTROL::EMSTAT_FAULT   ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_HOMING}; //STA_FAULT
+   Aris::RT_CONTROL::EMSTAT_FAULT   ,  Aris::RT_CONTROL::EMSTAT_POWEREDOFF, Aris::RT_CONTROL::EMSTAT_STOPPED,Aris::RT_CONTROL::EMSTAT_ENABLED,Aris::RT_CONTROL::EMSTAT_NONE,Aris::RT_CONTROL::EMSTAT_NONE}; //STA_FAULT
 
  char CElmoMotor::print_poweredoff[PRINT_INFO_BUFFER_SIZE];
  char CElmoMotor::print_stop[PRINT_INFO_BUFFER_SIZE];
@@ -419,20 +419,17 @@ int CElmoMotor::DoCommand()
     	    	if(m_currentState==Aris::RT_CONTROL::EMSTAT_RUNNING)
         	    	{
         	    		m_motorCommandData.Mode=6;//homing mode
-                         rt_printf("going home\n");
+                      //   rt_printf("going home\n");
         	    	}
         	    else if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
         	    		if(m_subState==SUB_FINISHED)
         	    		{
         	    			m_hasGoneHome=true;
-        	    		    m_isHomingFinished=true;
-        	    			m_isMotorCMDComplete=true;
-        	    			//_currentCommand==Aris::RT_CONTROL::EMCMD_RUNNING;
-         	    	 	 	rt_printf("homng finished\n");
-         	    			if(m_motorCommand.operationMode==8||m_motorCommand.operationMode==9||m_motorCommand.operationMode==10)
-         	    				m_motorCommandData.Mode=m_motorCommand.operationMode;
-         	    			else
-         	    				m_motorCommandData.Mode=DEFAULT_OPERATION_MODE;//NEED MUST
+        	    		   m_isHomingFinished=true;
+        	    			//m_isMotorCMDComplete=true;
+
+          	    	 	 	rt_printf("homng finished\n");
+
         	    		}
         	    		else //SUB_READY or SUB_BUSY
         	    		{
@@ -553,40 +550,56 @@ void CElmoMotor::UpdateMotorState()
 		_currentState=m_currentState;
 
 
-		if(m_currentState==m_nextState)
+		if(m_currentState==m_nextState)//m_motorCommand.command==m_motorFeedbackData.Mode)
 		{
 			m_nextState=Aris::RT_CONTROL::EMSTAT_NONE;
 			//rt_printf("see a state change \n");
 			m_isMotorCMDComplete=true;
+			m_isHomingFinished=false;
 		}
 
-		if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
-		{
-				m_isMotorCMDComplete=false;
-				m_nextState=Aris::RT_CONTROL::EMSTAT_HOMING;
-		}
-	//	else
-	//	{
-	//		m_isHomingFinished=false;
-	//	}
-		rt_printf("see a state change,next state%d ,current state%d \n",m_nextState,m_currentState);
-
+       //  rt_printf("see a state change,mode %d, next state%d ,current state%d \n",m_motorFeedbackData.Mode,m_nextState,m_currentState);
 	}
+
 
 
 
 	if(m_stateMachine[m_currentState][m_motorCommand.command]!=Aris::RT_CONTROL::EMSTAT_NONE)
 	{
-		//valid command
+ 		//valid command
 		if(m_motorCommand.command!=_currentCommand)
 		{
 			_currentCommand=m_motorCommand.command;
 			m_nextState=m_stateMachine[m_currentState][_currentCommand];
 			m_isMotorCMDComplete=false;
-			rt_printf("see a command change,command %d,next state%d ,current state%d \n",m_motorCommand.command,m_nextState,m_currentState);
-
-		}
+			// rt_printf("see a command change,command %d,next state%d ,current state%d \n",m_motorCommand.command,m_nextState,m_currentState);
+ 		}
 	}
+
+	if(m_motorCommand.command!=m_motorFeedbackData.Mode)
+ 	{
+		m_isMotorCMDComplete=false;
+ 	}
+
+	if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
+	{
+		if(m_isHomingFinished==false)
+		{
+			m_isMotorCMDComplete=false;
+			m_nextState=Aris::RT_CONTROL::EMSTAT_HOMING;
+		}
+		else
+		{
+    			if(m_motorCommand.operationMode==8||m_motorCommand.operationMode==9||m_motorCommand.operationMode==10)
+    				m_motorCommandData.Mode=m_motorCommand.operationMode;
+    			else
+    				m_motorCommandData.Mode=DEFAULT_OPERATION_MODE;//NEED MUST
+
+ 			    m_nextState=Aris::RT_CONTROL::EMSTAT_NONE;
+		}
+
+	}
+
 
 
 
