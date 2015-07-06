@@ -550,42 +550,23 @@ void CElmoMotor::UpdateMotorState()
 		_currentState=m_currentState;
 
 
-		if(m_currentState==m_nextState)//m_motorCommand.command==m_motorFeedbackData.Mode)
+		if(m_currentState==m_nextState)
 		{
 			m_nextState=Aris::RT_CONTROL::EMSTAT_NONE;
 			//rt_printf("see a state change \n");
 			m_isMotorCMDComplete=true;
-			m_isHomingFinished=false;
+			//m_isHomingFinished=false;
 		}
 
-       //  rt_printf("see a state change,mode %d, next state%d ,current state%d \n",m_motorFeedbackData.Mode,m_nextState,m_currentState);
-	}
-
-
-
-
-	if(m_stateMachine[m_currentState][m_motorCommand.command]!=Aris::RT_CONTROL::EMSTAT_NONE)
-	{
- 		//valid command
-		if(m_motorCommand.command!=_currentCommand)
-		{
-			_currentCommand=m_motorCommand.command;
-			m_nextState=m_stateMachine[m_currentState][_currentCommand];
-			m_isMotorCMDComplete=false;
-			// rt_printf("see a command change,command %d,next state%d ,current state%d \n",m_motorCommand.command,m_nextState,m_currentState);
- 		}
-	}
-
-	if(m_motorCommand.command!=m_motorFeedbackData.Mode)
- 	{
-		m_isMotorCMDComplete=false;
  	}
+
 
 	if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING)
 	{
 		if(m_isHomingFinished==false)
 		{
 			m_isMotorCMDComplete=false;
+
 			m_nextState=Aris::RT_CONTROL::EMSTAT_HOMING;
 		}
 		else
@@ -600,35 +581,27 @@ void CElmoMotor::UpdateMotorState()
 
 	}
 
+	if(m_stateMachine[m_currentState][m_motorCommand.command]!=Aris::RT_CONTROL::EMSTAT_NONE)
+	{
+		if(m_motorCommand.command==Aris::RT_CONTROL::EMCMD_GOHOME&&m_isHomingFinished==true)
+		{
 
+		}
+		else if(m_motorCommand.command!=_currentCommand)
+		{
 
-
-	/*if(m_isHomingFinished==true&&m_motorCommand.command==Aris::RT_CONTROL::EMCMD_GOHOME)
- 	{
-		m_motorCommand.command=Aris::RT_CONTROL::EMCMD_RUNNING;
+			_currentCommand=m_motorCommand.command;
+			m_nextState=m_stateMachine[m_currentState][_currentCommand];
+			m_isMotorCMDComplete=false;
+			// rt_printf("see a command change,command %d,next state%d ,current state%d \n",m_motorCommand.command,m_nextState,m_currentState);
+ 		}
 	}
 
-
- 	m_nextState=m_stateMachine[m_currentState][m_motorCommand.command];
-
-
-	if(m_nextState==m_currentState&&m_motorCommand.operationMode==m_motorFeedbackData.Mode&&m_currentState!=Aris::RT_CONTROL::EMSTAT_HOMING)
-	{
-		m_isMotorCMDComplete=true;
+	if(m_motorCommand.command!=m_motorFeedbackData.Mode)
+ 	{
+		m_isMotorCMDComplete=false;
  	}
 
-	else if(m_currentState==Aris::RT_CONTROL::EMSTAT_HOMING&&m_isHomingFinished==true)
-	{
-
-		if(m_motorCommand.operationMode==8||m_motorCommand.operationMode==9||m_motorCommand.operationMode==10)
-			m_motorCommandData.Mode=m_motorCommand.operationMode;
-		else
-			m_motorCommandData.Mode=DEFAULT_OPERATION_MODE;//NEED MUST
-
-		m_isMotorCMDComplete=true;
-	}
-	else
-		m_isMotorCMDComplete=false;*/
 
   }
 
