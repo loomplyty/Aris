@@ -460,9 +460,9 @@ void CElmoMotor::UpdateMotorState()
 		m_motorMode=Aris::RT_CONTROL::OMD_CYCLICTORQ;
 		m_motorCommandData.MaxTorque=300;
 		break;
-	//case 6:
-	//	m_motorMode=Aris::RT_CONTROL::OM_HOMING;
-	//	break;
+	case 6:
+		m_motorMode=Aris::RT_CONTROL::OMD_HOMING;
+		break;
 	default:
 		m_motorMode=Aris::RT_CONTROL::OMD_INVALID;
 		break;
