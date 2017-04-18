@@ -46,3 +46,4 @@ namespace aris
 }
 
 #endif // ARIS_VISION_H_
+

@@ -1,3 +1,4 @@
+ 
 # Aris
 Aris为潘阳的个人项目，主要由潘阳独立开发（除了tinyxml2的部分，该部分由Lee Thomason等人开发，参考https://github.com/leethomason/tinyxml2 在此向原作者表示感谢），同时参考和吸收了上海交通大学徐奕林、柴勋和田园的一些经验。
 本项目被用于驱动上海交通大学重大装备研究所的六足机器人与三支链机械臂。
@@ -11,4 +12,4 @@ Aris为潘阳的个人项目，主要由潘阳独立开发（除了tinyxml2的�
 3、aris::control部分，这部分只可在linux实时系统下运行，可以自动解析xml文件，生成Ethercat网络拓扑、并可以控制Elmo驱动器以及ati传感器。
 4、aris::sensor部分，这部分为传感器框架，已经集成好xsens陀螺仪，正在集成kinect，这个框架主要用来高速传输传感器数据到实时循环内。
 5、aris::server部分，这部分自动生成一个server，运行在机器人控制器中，可以让用户自定义指令及对应的步态等。
-# aris_ruicong
+ 

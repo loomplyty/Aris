@@ -6,6 +6,7 @@
 #include <atomic>
 #include <array>
 
+
 #include <aris_control_ethercat.h>
 
 
@@ -84,7 +85,7 @@ namespace aris
 			std::int32_t force_ratio_, torque_ratio_;
 		};
 
-		class EthercatForceSensorRuiCongCombo final:public EthercatSlave
+        class EthercatForceSensorRuiCongCombo final:public EthercatSlave
 		{
 		public:
 			struct RuiCongComboData
@@ -151,8 +152,9 @@ namespace aris
 				const std::vector<EthercatMotion::RawData> *last_motion_raw_data;
 				std::vector<EthercatMotion::RawData> *motion_raw_data;
 				std::vector<EthercatForceSensor::Data> *force_sensor_data;
-				std::vector<EthercatForceSensorRuiCongCombo::RuiCongComboData> *ruicongcombo_data;
-				const aris::core::MsgRT *msg_recv;
+                std::vector<EthercatForceSensorRuiCongCombo::RuiCongComboData> *ruicongcombo_data;
+
+                const aris::core::MsgRT *msg_recv;
 				aris::core::MsgRT *msg_send;
 			};
 
@@ -166,9 +168,9 @@ namespace aris
 			auto motionAtPhy(int i)->EthercatMotion &;
 			auto forceSensorNum()->std::size_t;
 			auto forceSensorAt(int i)->EthercatForceSensor &;
-			auto ruicongComboNum()->std::size_t;
+            auto ruicongComboNum()->std::size_t;
 			auto ruicongComboAt(int i)->EthercatForceSensorRuiCongCombo &;
-			auto msgPipe()->Pipe<aris::core::Msg>&;
+            auto msgPipe()->Pipe<aris::core::Msg>&;
 
 		protected:
 			EthercatController();

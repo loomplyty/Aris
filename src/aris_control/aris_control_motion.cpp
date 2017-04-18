@@ -380,6 +380,7 @@ namespace aris
 			std::int32_t value;
 
 			this->readPdo(0, 0, value);
+ 
 			data.Fx = static_cast<double>(value) * force_ratio_;
 
 			this->readPdo(0, 1, value);
@@ -520,6 +521,7 @@ namespace aris
 			//TBD
 			// write 1 than write 0 to the zeroing pdo
 			//this->writePdo();
+ 
 		}
 
 		struct EthercatController::Imp
@@ -536,10 +538,12 @@ namespace aris
 			std::vector<EthercatForceSensor *> force_sensor_vec_;
 			std::vector<EthercatForceSensor::Data> force_sensor_data_;
 
+ 
 			std::vector<EthercatForceSensorRuiCongCombo *> force_sensor_rcc_vec_;
 			std::vector<EthercatForceSensorRuiCongCombo::RuiCongComboData> force_sensor_rcc_data_;
 
 
+ 
 			std::unique_ptr<Pipe<std::vector<EthercatMotion::RawData> > > record_pipe_;
 			std::thread record_thread_;
 		};
@@ -559,7 +563,9 @@ namespace aris
 			/*Load all slaves*/
 			imp_->motion_vec_.clear();
 			imp_->force_sensor_vec_.clear();
+ 
 			imp_->force_sensor_rcc_vec_.clear();
+ 
 
 			auto slave_xml = xml_ele.FirstChildElement("Slave");
 			for (auto sla = slave_xml->FirstChildElement(); sla; sla = sla->NextSiblingElement())
@@ -573,11 +579,13 @@ namespace aris
 				{
 					imp_->force_sensor_vec_.push_back(addSlave<EthercatForceSensor>(std::ref(*slaveTypeMap.at(type))));
 				}
+ 
 				else if (type == "RuiCongCombo")
 				{
 					imp_->force_sensor_rcc_vec_.push_back(addSlave<EthercatForceSensorRuiCongCombo>(std::ref(*slaveTypeMap.at(type))));
 					std::cout << "RuiCongCombo added." << std::endl;
 				}
+ 
 				else
 				{
 					throw std::runtime_error(std::string("unknown slave type of \"") + type + "\"");
@@ -604,7 +612,6 @@ namespace aris
 			imp_->last_motion_rawdata_.resize(imp_->motion_vec_.size());
 			imp_->force_sensor_data_.resize(imp_->force_sensor_vec_.size());
 			imp_->force_sensor_rcc_data_.resize(imp_->force_sensor_rcc_vec_.size());
-
 			imp_->record_pipe_.reset(new Pipe<std::vector<EthercatMotion::RawData> >(true, imp_->motion_vec_.size()));
 		}
 		auto EthercatController::setControlStrategy(std::function<int(Data&)> strategy)->void
@@ -613,6 +620,7 @@ namespace aris
 			{
 				throw std::runtime_error("failed to set control strategy, because it alReady has one");
 			}
+
 			imp_->strategy_ = strategy;
 		}
 		auto EthercatController::start()->void
@@ -661,14 +669,17 @@ namespace aris
 		auto EthercatController::motionAtPhy(int i)->EthercatMotion & { return *imp_->motion_vec_.at(i); };
 		auto EthercatController::forceSensorNum()->std::size_t { return imp_->force_sensor_vec_.size(); };
 		auto EthercatController::forceSensorAt(int i)->EthercatForceSensor & { return *imp_->force_sensor_vec_.at(i); };
+ 
 		auto EthercatController::ruicongComboNum()->std::size_t { return imp_->force_sensor_rcc_vec_.size(); };
 		auto EthercatController::ruicongComboAt(int i)->EthercatForceSensorRuiCongCombo & { return *imp_->force_sensor_rcc_vec_.at(i); };
-
+ 
 		auto EthercatController::msgPipe()->Pipe<aris::core::Msg>& { return imp_->msg_pipe_; };
 		auto EthercatController::controlStrategy()->void
 		{
 			/*构造传入strategy的参数*/
+ 
 			Data data{ &imp_->last_motion_rawdata_, &imp_->motion_rawdata_, &imp_->force_sensor_data_, &imp_->force_sensor_rcc_data_, nullptr, nullptr };
+ 
 			
 			/*收取消息*/
 			if (this->msgPipe().recvInRT(aris::core::MsgRT::instance[0]) > 0)
@@ -677,6 +688,7 @@ namespace aris
 			};
 			
 			/*读取反馈*/
+ 
 			if (imp_->motion_vec_.size() > 0)
 			{
 				for (std::size_t i = 0; i < imp_->motion_vec_.size(); ++i)
@@ -715,6 +727,7 @@ namespace aris
 
 			test_count++;
 			test_count = test_count % 1000;
+ 
 			/*执行自定义的控制策略*/
 			if (imp_->strategy_)
 			{
@@ -729,6 +742,7 @@ namespace aris
 				imp_->last_motion_rawdata_[i] = imp_->motion_rawdata_[i];
 			}
 
+ 
 			for (std::size_t i = 0; i < imp_->force_sensor_rcc_data_.at(0).force.size(); i++)
 			{
 				if (imp_->force_sensor_rcc_data_.at(0).isZeroingRequested.at(i))
@@ -738,6 +752,7 @@ namespace aris
 				}
 			}
 
+ 
 			/*发送数据到记录的线程*/
 			imp_->record_pipe_->sendToNrt(imp_->motion_rawdata_);
 

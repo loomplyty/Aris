@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+ cmake_minimum_required(VERSION 2.8)
 
 # add prefix to every string in a variable
 FUNCTION(PREPEND var prefix)
@@ -204,16 +204,6 @@ target_link_libraries(demo_Sensor ${ALL_LINK_LIB})
 
 endif(MAKE_DEMO)
 
-
-
-
-
-
-
-
-
-
-
 ############################################ install aris ############################################
 if(UNIX)
 	set(CMAKE_INSTALL_PREFIX "/usr/aris")
@@ -232,15 +222,3 @@ install(DIRECTORY src/aris_control/resource/ DESTINATION resource/aris_control)
 if(UNIX)
 	add_custom_target(uninstall rm -r /usr/aris)
 endif(UNIX)
-
-
-
-
-
-
-
-
-
-
-
-

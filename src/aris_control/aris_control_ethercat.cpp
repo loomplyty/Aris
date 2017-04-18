@@ -67,9 +67,11 @@ namespace aris
 					else type_name_ = xml_ele.Attribute("type");
 
 					index_ = std::stoi(xml_ele.Attribute("index"), nullptr, 0);
+ 
 
 					subindex_ = std::stoi(xml_ele.Attribute("subindex"), nullptr, 0);
 
+ 
 					imp_ = imp;
 					size_ = typeInfoMap().at(type_name_).size_;
 				}
@@ -101,13 +103,14 @@ namespace aris
 						{
 							info.queryFunc = [](const std::string &str, void *value) {std::stringstream(str) >> (*reinterpret_cast<DataType*>(value)); };
 						}
+ 
 						return info;
 					}
 				};
 
 				static auto typeInfoMap()->const std::map<std::string, TypeInfo>&
 				{
-
+ 
 					const static std::map<std::string, TypeInfo> info_map
 					{
 						std::make_pair(std::string("int8"), TypeInfo::createTypeInfo<std::int8_t>()),
@@ -374,15 +377,13 @@ namespace aris
 			imp_->product_code_ = std::stoi(xml_ele.Attribute("product_code"), nullptr, 0);
 
 			imp_->vender_id_ = std::stoul(xml_ele.Attribute("vender_id"), nullptr, 0);
-
-			imp_->alias_ = std::stoi(xml_ele.Attribute("alias"), nullptr, 0);
-
+			imp_->alias_ = std::stoi(xml_ele.Attribute("alias"), nullptr, 0); 
 			imp_->distributed_clock_.reset(new std::int32_t);
 
 			if (xml_ele.Attribute("distributed_clock"))
 			{
 				*imp_->distributed_clock_.get() = std::stoi(xml_ele.Attribute("distributed_clock"), nullptr, 0);
-
+ 
 			}
 			else
 			{
@@ -398,6 +399,7 @@ namespace aris
 			}
 
 			// load SDO
+ 
 			if (xml_ele.FirstChildElement("SDO"))
 			{
 				auto sdo_xml_ele = xml_ele.FirstChildElement("SDO");
@@ -407,6 +409,7 @@ namespace aris
 				}
 			}
 			
+ 
 
 			// create ecrt structs
 			for (auto &p_g : imp_->pdo_group_vec_)

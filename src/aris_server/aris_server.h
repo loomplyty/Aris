@@ -23,10 +23,12 @@ namespace aris
 		struct BasicFunctionParam :aris::dynamic::PlanParamBase
 		{
 			bool active_motor[MAX_MOTOR_NUM];
+ 
 			bool active_leg[6] = {false,false,false,false,false,false};//ugly ugly ugly
 
 			BasicFunctionParam() { std::fill(active_motor, active_motor + MAX_MOTOR_NUM, true);
 			};
+ 
 		};
 
 		//for all ordinary gaits
@@ -38,7 +40,9 @@ namespace aris
 			std::int32_t gait_id;
 			const aris::sensor::ImuData *imu_data;
 			const std::vector<aris::control::EthercatForceSensor::Data> *force_data;
+ 
 			std::vector<aris::control::EthercatForceSensorRuiCongCombo::RuiCongComboData> *ruicong_data;
+ 
 			const std::vector<aris::control::EthercatMotion::RawData> *motion_raw_data;
 			const std::vector<aris::control::EthercatMotion::RawData> *last_motion_raw_data;
 			const std::vector<double> *motion_feedback_pos;
