@@ -1,4 +1,4 @@
-﻿obj-m+=xsens_mt.o
+obj-m+=xsens_mt.o
 ifndef KDIR
 KDIR:=/lib/modules/$(shell uname -r)/build
 endif

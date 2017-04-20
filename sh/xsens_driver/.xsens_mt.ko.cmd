@@ -1,0 +1,1 @@
+cmd_/home/hex/Desktop/Aris/sh/xsens_driver/xsens_mt.ko := ld -r -m elf_x86_64 -T /usr/src/linux-3.8.13/scripts/module-common.lds --build-id  -o /home/hex/Desktop/Aris/sh/xsens_driver/xsens_mt.ko /home/hex/Desktop/Aris/sh/xsens_driver/xsens_mt.o /home/hex/Desktop/Aris/sh/xsens_driver/xsens_mt.mod.o
